@@ -3,6 +3,7 @@ import { Sidebar, ActiveNav } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { ProjectView } from './components/project/ProjectView';
+import { LoginPage } from './components/auth/LoginPage';
 import { NewResearchModal } from './components/modals/NewResearchModal';
 import { AddSourceModal } from './components/modals/AddSourceModal';
 import { SettingsModal } from './components/modals/SettingsModal';
@@ -10,7 +11,12 @@ import { AuthModal } from './components/modals/AuthModal';
 import { Project, Source, User } from './types';
 import { StorageService } from './db/storage';
 
+const AUTH_STATUS_KEY = 'RESEARCH_AI_IS_LOGGED_IN';
+
 export const App: React.FC = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    return localStorage.getItem(AUTH_STATUS_KEY) === 'true';
+  });
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentUser, setCurrentUser] = useState<User>(StorageService.getUser());
   const [activeNav, setActiveNav] = useState<ActiveNav>('home');
@@ -30,6 +36,17 @@ export const App: React.FC = () => {
     setProjects(loadedProjects);
     setCurrentUser(loadedUser);
   }, []);
+
+  const handleLoginSuccess = (user: User) => {
+    setCurrentUser(user);
+    setIsLoggedIn(true);
+    localStorage.setItem(AUTH_STATUS_KEY, 'true');
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    localStorage.setItem(AUTH_STATUS_KEY, 'false');
+  };
 
   const currentProject = projects.find(p => p.id === selectedProjectId);
 
@@ -94,6 +111,11 @@ export const App: React.FC = () => {
     return undefined;
   };
 
+  // If not logged in, render the Login Page & "Butuh Bantuan? Titik Temu" Tutorial
+  if (!isLoggedIn) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#FAFAFA]">
       {/* Sidebar navigation */}
@@ -110,6 +132,7 @@ export const App: React.FC = () => {
         }}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Area */}

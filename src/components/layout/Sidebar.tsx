@@ -9,7 +9,7 @@ import {
   Settings, 
   Sparkles,
   ChevronRight,
-  User as UserIcon
+  LogOut
 } from 'lucide-react';
 import { User } from '../../types';
 
@@ -21,6 +21,7 @@ interface SidebarProps {
   currentUser: User;
   onOpenSettings: () => void;
   onOpenAuth: () => void;
+  onLogout: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
@@ -28,7 +29,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setActiveNav, 
   currentUser,
   onOpenSettings,
-  onOpenAuth
+  onOpenAuth,
+  onLogout
 }) => {
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
@@ -44,11 +46,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside className="w-64 h-screen bg-[#FAF9F6] border-r border-zinc-200/80 flex flex-col justify-between shrink-0 select-none">
       {/* Brand Header */}
       <div>
-        <div className="p-6 pb-5 flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-amber-400 flex items-center justify-center text-zinc-950 font-bold shadow-sm">
-            <Sparkles className="w-4 h-4 fill-zinc-950" />
+        <div className="p-6 pb-5 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-amber-400 flex items-center justify-center text-zinc-950 font-bold shadow-sm">
+              <Sparkles className="w-4 h-4 fill-zinc-950" />
+            </div>
+            <span className="font-semibold tracking-tight text-zinc-900 text-lg">Research AI</span>
           </div>
-          <span className="font-semibold tracking-tight text-zinc-900 text-lg">Research AI</span>
+
+          <button
+            onClick={onLogout}
+            title="Keluar ke Halaman Utama"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/50 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Nav Links */}
@@ -97,7 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Dynamic User Profile Card */}
         <div 
           onClick={onOpenAuth}
-          title="Klik untuk ganti akun atau profil peneliti"
+          title="Klik untuk ubah profil atau ganti akun"
           className="flex items-center justify-between p-2 rounded-xl hover:bg-amber-100/60 cursor-pointer border border-transparent hover:border-amber-200 transition-all group"
         >
           <div className="flex items-center gap-2.5 overflow-hidden">
