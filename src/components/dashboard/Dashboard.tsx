@@ -8,7 +8,9 @@ import {
   FileText,
   CheckCircle2,
   Clock,
-  Sparkles
+  Sparkles,
+  FolderPlus,
+  Download
 } from 'lucide-react';
 import { Project, ResearchState, User } from '../../types';
 
@@ -18,6 +20,7 @@ interface DashboardProps {
   onSelectProject: (projectId: string) => void;
   onNewResearch: () => void;
   onQuickAction: (action: 'add_source' | 'notebooklm' | 'visualization') => void;
+  onLoadSampleData?: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -25,7 +28,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   currentUser,
   onSelectProject,
   onNewResearch,
-  onQuickAction
+  onQuickAction,
+  onLoadSampleData
 }) => {
   // Compute dashboard metrics
   const activeCount = projects.filter(p => p.state !== 'Finalized').length;
@@ -105,34 +109,66 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           <div className="space-y-3">
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                onClick={() => onSelectProject(project.id)}
-                className="group bg-white p-4 px-5 rounded-2xl border border-zinc-200/80 hover:border-amber-300 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between"
-              >
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-600 group-hover:bg-amber-100/60 group-hover:text-amber-800 transition-colors shrink-0">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-semibold text-zinc-900 group-hover:text-amber-950 truncate">
-                      {project.title}
-                    </h3>
-                    <div className="flex items-center gap-2.5 mt-1">
-                      {getStatusBadge(project.state)}
-                      <span className="text-[11px] text-zinc-400">
-                        Updated {project.ledger[0]?.timestamp || 'Recently'}
-                      </span>
-                    </div>
-                  </div>
+            {projects.length === 0 ? (
+              <div className="bg-white p-8 rounded-2xl border border-zinc-200/80 text-center space-y-4 shadow-2xs">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200/60">
+                  <FolderPlus className="w-6 h-6" />
                 </div>
-
-                <div className="text-zinc-300 group-hover:text-zinc-700 group-hover:translate-x-0.5 transition-all">
-                  <ArrowRight className="w-4 h-4" />
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-zinc-900">Belum Ada Proyek Riset</h3>
+                  <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
+                    Workspace pribadi Anda siap. Mulai proyek riset baru Anda, atau muat data sampel untuk mengeksplorasi fitur analisis.
+                  </p>
+                </div>
+                <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
+                  <button
+                    onClick={onNewResearch}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-400 hover:bg-amber-500 text-zinc-950 text-xs font-semibold rounded-xl transition-colors shadow-2xs"
+                  >
+                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Buat Riset Pertama</span>
+                  </button>
+                  {onLoadSampleData && (
+                    <button
+                      onClick={onLoadSampleData}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-semibold rounded-xl transition-colors"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Muat Data Contoh (Demo)</span>
+                    </button>
+                  )}
                 </div>
               </div>
-            ))}
+            ) : (
+              projects.map((project) => (
+                <div
+                  key={project.id}
+                  onClick={() => onSelectProject(project.id)}
+                  className="group bg-white p-4 px-5 rounded-2xl border border-zinc-200/80 hover:border-amber-300 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-600 group-hover:bg-amber-100/60 group-hover:text-amber-800 transition-colors shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-zinc-900 group-hover:text-amber-950 truncate">
+                        {project.title}
+                      </h3>
+                      <div className="flex items-center gap-2.5 mt-1">
+                        {getStatusBadge(project.state)}
+                        <span className="text-[11px] text-zinc-400">
+                          Updated {project.ledger[0]?.timestamp || 'Recently'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-zinc-300 group-hover:text-zinc-700 group-hover:translate-x-0.5 transition-all">
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

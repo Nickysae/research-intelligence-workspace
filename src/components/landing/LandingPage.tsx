@@ -70,8 +70,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
 
   const handleDemoLogin = () => {
     StorageService.saveUser(INITIAL_USER);
-    const current = StorageService.getProjects();
-    if (!current || current.length === 0) StorageService.saveProjects(INITIAL_PROJECTS);
+    const current = StorageService.getAllProjects();
+    const hasDemo = current.some(p => p.userId === INITIAL_USER.id);
+    if (!hasDemo) {
+      StorageService.saveProjects([...INITIAL_PROJECTS, ...current]);
+    }
     onLoginSuccess(INITIAL_USER);
   };
 

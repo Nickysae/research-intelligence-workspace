@@ -9,7 +9,7 @@ import { AddSourceModal } from './components/modals/AddSourceModal';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { AuthModal } from './components/modals/AuthModal';
 import { Project, Source, User } from './types';
-import { StorageService } from './db/storage';
+import { StorageService, INITIAL_PROJECTS } from './db/storage';
 
 const AUTH_STATUS_KEY = 'RESEARCH_AI_IS_LOGGED_IN';
 
@@ -35,22 +35,35 @@ export const App: React.FC = () => {
 
   // Initialize data from local storage
   useEffect(() => {
-    const loadedProjects = StorageService.getProjects();
     const loadedUser = StorageService.getUser();
+    const loadedProjects = StorageService.getProjects(loadedUser.id);
     setProjects(loadedProjects);
     setCurrentUser(loadedUser);
   }, []);
 
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
-    setProjects(StorageService.getProjects());
+    setProjects(StorageService.getProjects(user.id));
+    setSelectedProjectId(null);
     setAppView('workspace');
     localStorage.setItem(AUTH_STATUS_KEY, 'true');
   };
 
   const handleLogout = () => {
+    setSelectedProjectId(null);
     setAppView('landing');
     localStorage.setItem(AUTH_STATUS_KEY, 'false');
+  };
+
+  const handleLoadSampleData = () => {
+    const sampleProjects: Project[] = INITIAL_PROJECTS.map((p, idx) => ({
+      ...p,
+      id: `proj_${currentUser.id}_${idx + 1}_${Date.now()}`,
+      userId: currentUser.id,
+      title: `${p.title} (Contoh)`
+    }));
+    sampleProjects.forEach(p => StorageService.saveProject(p));
+    setProjects(StorageService.getProjects(currentUser.id));
   };
 
   const currentProject = projects.find(p => p.id === selectedProjectId);
@@ -171,6 +184,7 @@ export const App: React.FC = () => {
               onSelectProject={(id) => setSelectedProjectId(id)}
               onNewResearch={() => setIsNewResearchOpen(true)}
               onQuickAction={handleQuickAction}
+              onLoadSampleData={handleLoadSampleData}
             />
           )}
         </main>

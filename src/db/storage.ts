@@ -463,7 +463,7 @@ export interface AppSettings {
 }
 
 export const StorageService = {
-  getProjects(): Project[] {
+  getAllProjects(): Project[] {
     const data = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!data) {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(INITIAL_PROJECTS));
@@ -476,8 +476,16 @@ export const StorageService = {
     }
   },
 
+  getProjects(userId?: string): Project[] {
+    const all = this.getAllProjects();
+    if (userId) {
+      return all.filter(p => p.userId === userId);
+    }
+    return all;
+  },
+
   getProjectById(id: string): Project | undefined {
-    const projects = this.getProjects();
+    const projects = this.getAllProjects();
     return projects.find(p => p.id === id);
   },
 
@@ -486,7 +494,7 @@ export const StorageService = {
   },
 
   saveProject(project: Project) {
-    const projects = this.getProjects();
+    const projects = this.getAllProjects();
     const index = projects.findIndex(p => p.id === project.id);
     if (index >= 0) {
       projects[index] = { ...project, updatedAt: new Date().toISOString() };
