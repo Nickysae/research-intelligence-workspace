@@ -3,7 +3,6 @@ import { Sidebar, ActiveNav } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { ProjectView } from './components/project/ProjectView';
-import { LandingHelpPage } from './components/landing/LandingHelpPage';
 import { LoginPage } from './components/auth/LoginPage';
 import { NewResearchModal } from './components/modals/NewResearchModal';
 import { AddSourceModal } from './components/modals/AddSourceModal';
@@ -14,12 +13,12 @@ import { StorageService } from './db/storage';
 
 const AUTH_STATUS_KEY = 'RESEARCH_AI_IS_LOGGED_IN';
 
-export type AppView = 'landing' | 'login' | 'workspace';
+export type AppView = 'login' | 'workspace';
 
 export const App: React.FC = () => {
   const [appView, setAppView] = useState<AppView>(() => {
     const isAuth = localStorage.getItem(AUTH_STATUS_KEY) === 'true';
-    return isAuth ? 'workspace' : 'landing';
+    return isAuth ? 'workspace' : 'login';
   });
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -50,7 +49,7 @@ export const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    setAppView('landing');
+    setAppView('login');
     localStorage.setItem(AUTH_STATUS_KEY, 'false');
   };
 
@@ -116,22 +115,11 @@ export const App: React.FC = () => {
     return undefined;
   };
 
-  // 1. Dedicated Landing Help Page
-  if (appView === 'landing') {
-    return (
-      <LandingHelpPage
-        onGoToLogin={() => setAppView('login')}
-        onQuickDemo={handleLoginSuccess}
-      />
-    );
-  }
-
-  // 2. Dedicated Login Page
+  // 1. Dedicated Login Page
   if (appView === 'login') {
     return (
       <LoginPage
         onLoginSuccess={handleLoginSuccess}
-        onBackToLanding={() => setAppView('landing')}
       />
     );
   }
@@ -165,7 +153,7 @@ export const App: React.FC = () => {
           currentUser={currentUser}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenAuth={() => setIsAuthOpen(true)}
-          onOpenHelp={() => setAppView('landing')}
+          onOpenHelp={() => {}}
         />
 
         <main className="flex-1 overflow-y-auto">

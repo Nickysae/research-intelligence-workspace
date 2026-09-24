@@ -12,7 +12,7 @@ import { INITIAL_USER, INITIAL_PROJECTS, StorageService } from '../../db/storage
 
 interface LoginPageProps {
   onLoginSuccess: (user: User) => void;
-  onBackToLanding: () => void;
+  onBackToLanding?: () => void;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onBackToLanding }) => {
