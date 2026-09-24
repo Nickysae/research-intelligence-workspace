@@ -39,9 +39,11 @@ export const App: React.FC = () => {
 
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
+    setProjects(StorageService.getProjects());
     setIsLoggedIn(true);
     localStorage.setItem(AUTH_STATUS_KEY, 'true');
   };
+
 
   const handleLogout = () => {
     setIsLoggedIn(false);

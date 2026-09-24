@@ -17,10 +17,11 @@ import {
   GitMerge,
   Search,
   ExternalLink,
-  Lightbulb
+  Lightbulb,
+  Play
 } from 'lucide-react';
 import { User } from '../../types';
-import { StorageService } from '../../db/storage';
+import { INITIAL_USER, INITIAL_PROJECTS, StorageService } from '../../db/storage';
 
 interface LoginPageProps {
   onLoginSuccess: (user: User) => void;
@@ -71,8 +72,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   };
 
   const handleDemoLogin = () => {
-    const demoUser = StorageService.getUser();
-    onLoginSuccess(demoUser);
+    StorageService.saveUser(INITIAL_USER);
+    // Ensure default demo projects exist
+    const currentProjects = StorageService.getProjects();
+    if (!currentProjects || currentProjects.length === 0) {
+      StorageService.saveProjects(INITIAL_PROJECTS);
+    }
+    onLoginSuccess(INITIAL_USER);
+  };
+
+  const handleQuickNickyLogin = () => {
+    const nickyUser: User = {
+      id: 'usr_nickysae',
+      name: 'Nicky Sae',
+      email: 'nickysae@gmail.com',
+      avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=Nicky+Sae&backgroundColor=fbbf24,f59e0b'
+    };
+    StorageService.saveUser(nickyUser);
+    onLoginSuccess(nickyUser);
   };
 
   // Konsep Titik Temu Langkah Penggunaan
@@ -151,7 +168,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       {/* Top Navbar */}
       <header className="px-8 py-5 bg-white/80 backdrop-blur-md border-b border-zinc-200/80 sticky top-0 z-40 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-amber-400 flex items-center justify-center text-zinc-950 font-bold shadow-xs">
+          <div className="w-8 h-8 rounded-lg bg-amber-400 flex items-center justify-center text-zinc-950 font-bold shadow-xs">
             <Sparkles className="w-4 h-4 fill-zinc-950" />
           </div>
           <div>
@@ -205,17 +222,43 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         </div>
 
         {/* Right 5 Cols: Login Form Card */}
-        <div className="lg:col-span-5 bg-white p-7 sm:p-8 rounded-3xl border border-zinc-200 shadow-xl space-y-6">
+        <div className="lg:col-span-5 bg-white p-7 sm:p-8 rounded-3xl border border-zinc-200 shadow-xl space-y-5">
           <div className="space-y-1">
             <h2 className="font-serif font-semibold text-zinc-900 text-xl">Masuk ke Workspace</h2>
-            <p className="text-xs text-zinc-500">Mulai riset baru atau lanjutkan riset Anda</p>
+            <p className="text-xs text-zinc-500">Mulai riset baru atau jelajahi demo workspace</p>
+          </div>
+
+          {/* Quick Demo Access Bar (High Visibility) */}
+          <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/80 space-y-2">
+            <p className="text-[11px] font-semibold text-amber-950 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              <span>Akses Cepat Instan (1-Klik Langsung Masuk):</span>
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleDemoLogin}
+                className="w-full py-2 px-3 bg-amber-400 hover:bg-amber-500 text-zinc-950 text-xs font-semibold rounded-xl shadow-2xs transition-all text-center flex items-center justify-center gap-1"
+              >
+                <Play className="w-3 h-3 fill-zinc-950" />
+                <span>Demo (Alexandra)</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleQuickNickyLogin}
+                className="w-full py-2 px-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold rounded-xl shadow-2xs transition-all text-center flex items-center justify-center gap-1"
+              >
+                <UserIcon className="w-3 h-3" />
+                <span>Akun Nicky Sae</span>
+              </button>
+            </div>
           </div>
 
           {/* 1-Click Google Sign In */}
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full py-3 px-4 rounded-2xl border border-zinc-200 hover:border-amber-300 hover:bg-amber-50/40 flex items-center justify-center gap-3 text-xs font-semibold text-zinc-800 shadow-2xs transition-all transform active:scale-98"
+            className="w-full py-2.5 px-4 rounded-xl border border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50 flex items-center justify-center gap-2.5 text-xs font-semibold text-zinc-800 shadow-2xs transition-all transform active:scale-98"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -223,17 +266,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
             </svg>
-            <span>Sign in with Google</span>
+            <span>Sign in dengan Akun Google</span>
           </button>
 
           <div className="flex items-center gap-3 text-xs text-zinc-400">
             <div className="flex-1 h-px bg-zinc-100" />
-            <span>atau masuk dengan akun peneliti</span>
+            <span>atau isi identitas manual</span>
             <div className="flex-1 h-px bg-zinc-100" />
           </div>
 
           {/* Form */}
-          <form onSubmit={handleManualLogin} className="space-y-3.5 text-xs">
+          <form onSubmit={handleManualLogin} className="space-y-3 text-xs">
             <div>
               <label className="block font-semibold text-zinc-700 mb-1">Nama Lengkap Peneliti</label>
               <input
@@ -260,23 +303,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
             <button
               type="submit"
-              className="w-full py-3 bg-amber-400 hover:bg-amber-500 text-zinc-950 font-semibold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-amber-400 hover:bg-amber-500 text-zinc-950 font-semibold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2"
             >
               <span>Masuk ke Research Workspace</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
-
-          {/* Guest / Demo Login Quick Button */}
-          <div className="pt-2 border-t border-zinc-100 text-center">
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              className="text-xs text-zinc-500 hover:text-amber-600 font-medium transition-colors"
-            >
-              Ingin melihat demo dulu? <strong>Masuk sebagai Peneliti Demo &rarr;</strong>
-            </button>
-          </div>
         </div>
       </main>
 
