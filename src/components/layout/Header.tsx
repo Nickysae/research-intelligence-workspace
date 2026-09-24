@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Bell, Sparkles } from 'lucide-react';
+import { Search, Bell, Sparkles, HelpCircle } from 'lucide-react';
 import { User } from '../../types';
 
 interface HeaderProps {
@@ -9,6 +9,7 @@ interface HeaderProps {
   currentUser: User;
   onOpenSettings: () => void;
   onOpenAuth: () => void;
+  onOpenHelp: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,7 +18,8 @@ export const Header: React.FC<HeaderProps> = ({
   breadcrumbs,
   currentUser,
   onOpenSettings,
-  onOpenAuth
+  onOpenAuth,
+  onOpenHelp
 }) => {
   return (
     <header className="h-16 px-8 border-b border-zinc-200/80 bg-white/80 backdrop-blur-md flex items-center justify-between sticky top-0 z-30">
@@ -48,10 +50,10 @@ export const Header: React.FC<HeaderProps> = ({
         )}
       </div>
 
-      {/* Right: Search + Notifications + Profile */}
+      {/* Right: Search + Help + Notifications + Profile */}
       <div className="flex items-center gap-4">
         {/* Search Bar */}
-        <div className="relative w-72">
+        <div className="relative w-64 lg:w-72">
           <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -61,6 +63,16 @@ export const Header: React.FC<HeaderProps> = ({
             className="w-full pl-9 pr-4 py-1.5 text-xs rounded-full bg-zinc-100/80 border border-zinc-200/60 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:bg-white text-zinc-800 placeholder-zinc-400 transition-all"
           />
         </div>
+
+        {/* Help & Titik Temu Button */}
+        <button
+          onClick={onOpenHelp}
+          title="Buka Pusat Panduan & Titik Temu"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-xs font-semibold text-amber-900 transition-colors"
+        >
+          <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
+          <span className="hidden sm:inline">Panduan Titik Temu</span>
+        </button>
 
         {/* Notification Bell */}
         <button 

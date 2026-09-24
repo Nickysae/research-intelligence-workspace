@@ -3,6 +3,7 @@ import { Sidebar, ActiveNav } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { ProjectView } from './components/project/ProjectView';
+import { LandingHelpPage } from './components/landing/LandingHelpPage';
 import { LoginPage } from './components/auth/LoginPage';
 import { NewResearchModal } from './components/modals/NewResearchModal';
 import { AddSourceModal } from './components/modals/AddSourceModal';
@@ -13,10 +14,14 @@ import { StorageService } from './db/storage';
 
 const AUTH_STATUS_KEY = 'RESEARCH_AI_IS_LOGGED_IN';
 
+export type AppView = 'landing' | 'login' | 'workspace';
+
 export const App: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
-    return localStorage.getItem(AUTH_STATUS_KEY) === 'true';
+  const [appView, setAppView] = useState<AppView>(() => {
+    const isAuth = localStorage.getItem(AUTH_STATUS_KEY) === 'true';
+    return isAuth ? 'workspace' : 'landing';
   });
+
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentUser, setCurrentUser] = useState<User>(StorageService.getUser());
   const [activeNav, setActiveNav] = useState<ActiveNav>('home');
@@ -40,13 +45,12 @@ export const App: React.FC = () => {
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
     setProjects(StorageService.getProjects());
-    setIsLoggedIn(true);
+    setAppView('workspace');
     localStorage.setItem(AUTH_STATUS_KEY, 'true');
   };
 
-
   const handleLogout = () => {
-    setIsLoggedIn(false);
+    setAppView('landing');
     localStorage.setItem(AUTH_STATUS_KEY, 'false');
   };
 
@@ -58,7 +62,6 @@ export const App: React.FC = () => {
   };
 
   const handleProjectCreated = (newProject: Project) => {
-    // Associate with currentUser
     const projectWithUser: Project = {
       ...newProject,
       userId: currentUser.id
@@ -113,11 +116,27 @@ export const App: React.FC = () => {
     return undefined;
   };
 
-  // If not logged in, render the Login Page & "Butuh Bantuan? Titik Temu" Tutorial
-  if (!isLoggedIn) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  // 1. Dedicated Landing Help Page
+  if (appView === 'landing') {
+    return (
+      <LandingHelpPage
+        onGoToLogin={() => setAppView('login')}
+        onQuickDemo={handleLoginSuccess}
+      />
+    );
   }
 
+  // 2. Dedicated Login Page
+  if (appView === 'login') {
+    return (
+      <LoginPage
+        onLoginSuccess={handleLoginSuccess}
+        onBackToLanding={() => setAppView('landing')}
+      />
+    );
+  }
+
+  // 3. Main Research Workspace View
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#FAFAFA]">
       {/* Sidebar navigation */}
@@ -146,6 +165,7 @@ export const App: React.FC = () => {
           currentUser={currentUser}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenAuth={() => setIsAuthOpen(true)}
+          onOpenHelp={() => setAppView('landing')}
         />
 
         <main className="flex-1 overflow-y-auto">
