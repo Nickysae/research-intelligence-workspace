@@ -3,7 +3,7 @@ import { Sidebar, ActiveNav } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { ProjectView } from './components/project/ProjectView';
-import { LoginPage } from './components/auth/LoginPage';
+import { LandingPage } from './components/landing/LandingPage';
 import { NewResearchModal } from './components/modals/NewResearchModal';
 import { AddSourceModal } from './components/modals/AddSourceModal';
 import { SettingsModal } from './components/modals/SettingsModal';
@@ -13,12 +13,12 @@ import { StorageService } from './db/storage';
 
 const AUTH_STATUS_KEY = 'RESEARCH_AI_IS_LOGGED_IN';
 
-export type AppView = 'login' | 'workspace';
+export type AppView = 'landing' | 'workspace';
 
 export const App: React.FC = () => {
   const [appView, setAppView] = useState<AppView>(() => {
     const isAuth = localStorage.getItem(AUTH_STATUS_KEY) === 'true';
-    return isAuth ? 'workspace' : 'login';
+    return isAuth ? 'workspace' : 'landing';
   });
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -49,7 +49,7 @@ export const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    setAppView('login');
+    setAppView('landing');
     localStorage.setItem(AUTH_STATUS_KEY, 'false');
   };
 
@@ -98,7 +98,7 @@ export const App: React.FC = () => {
   };
 
   // Filtered projects by search query
-  const filteredProjects = projects.filter(p => 
+  const filteredProjects = projects.filter(p =>
     p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.keyInfo.question.toLowerCase().includes(searchQuery.toLowerCase())
@@ -115,10 +115,10 @@ export const App: React.FC = () => {
     return undefined;
   };
 
-  // 1. Dedicated Login Page
-  if (appView === 'login') {
+  // 1. Landing Page (login + guide + about)
+  if (appView === 'landing') {
     return (
-      <LoginPage
+      <LandingPage
         onLoginSuccess={handleLoginSuccess}
       />
     );
