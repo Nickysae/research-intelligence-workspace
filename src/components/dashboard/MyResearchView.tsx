@@ -17,14 +17,12 @@ interface MyResearchViewProps {
   projects: Project[];
   onSelectProject: (id: string) => void;
   onNewResearch: () => void;
-  onLoadSampleData?: () => void;
 }
 
 export const MyResearchView: React.FC<MyResearchViewProps> = ({
   projects,
   onSelectProject,
-  onNewResearch,
-  onLoadSampleData
+  onNewResearch
 }) => {
   const [search, setSearch] = useState('');
   const [filterState, setFilterState] = useState<string>('all');
@@ -117,12 +115,12 @@ export const MyResearchView: React.FC<MyResearchViewProps> = ({
             </h3>
             <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
               {projects.length === 0
-                ? 'Mulai inisiasi proyek riset pertama Anda dengan bantuan AI, atau muat data sampel untuk mengeksplorasi seluruh modul.'
+                ? 'Mulai inisiasi proyek riset pertama Anda dengan bantuan AI untuk mengumpulkan sumber dan merumuskan titik temu.'
                 : 'Coba ubah kata kunci pencarian atau filter status yang Anda pilih.'}
             </p>
           </div>
           {projects.length === 0 && (
-            <div className="flex items-center justify-center gap-3 pt-3 flex-wrap">
+            <div className="flex items-center justify-center pt-3">
               <button
                 onClick={onNewResearch}
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-400 hover:bg-amber-500 text-zinc-950 text-xs font-semibold rounded-xl transition-colors shadow-2xs"
@@ -130,15 +128,6 @@ export const MyResearchView: React.FC<MyResearchViewProps> = ({
                 <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span>Buat Riset Pertama</span>
               </button>
-              {onLoadSampleData && (
-                <button
-                  onClick={onLoadSampleData}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-semibold rounded-xl transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Muat Data Contoh (Demo)</span>
-                </button>
-              )}
             </div>
           )}
         </div>

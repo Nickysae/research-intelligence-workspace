@@ -18,7 +18,6 @@ interface HelpModalProps {
   isOpen: boolean;
   onClose: () => void;
   onNewResearch?: () => void;
-  onLoadSample?: () => void;
 }
 
 const MODULE_GUIDES = [
@@ -52,8 +51,7 @@ const MODULE_GUIDES = [
 export const HelpModal: React.FC<HelpModalProps> = ({
   isOpen,
   onClose,
-  onNewResearch,
-  onLoadSample
+  onNewResearch
 }) => {
   const [selectedIdx, setSelectedIdx] = useState(0);
 
@@ -172,24 +170,13 @@ export const HelpModal: React.FC<HelpModalProps> = ({
           </a>
 
           <div className="flex items-center gap-2">
-            {onLoadSample && (
-              <button
-                onClick={() => {
-                  onLoadSample();
-                  onClose();
-                }}
-                className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-semibold transition-colors"
-              >
-                Muat Proyek Contoh
-              </button>
-            )}
             {onNewResearch && (
               <button
                 onClick={() => {
                   onNewResearch();
                   onClose();
                 }}
-                className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-zinc-950 text-xs font-semibold transition-colors shadow-2xs"
+                className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-zinc-950 text-xs font-semibold transition-colors shadow-2xs"
               >
                 Buat Riset Baru
               </button>

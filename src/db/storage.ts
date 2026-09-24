@@ -551,21 +551,76 @@ export const StorageService = {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   },
 
-  getUser(): User {
-    const data = localStorage.getItem('RESEARCH_AI_USER_V1');
-    if (!data) {
-      localStorage.setItem('RESEARCH_AI_USER_V1', JSON.stringify(INITIAL_USER));
-      return INITIAL_USER;
-    }
+  getRegisteredUsers(): User[] {
+    const data = localStorage.getItem('RESEARCH_AI_REGISTERED_USERS_V1');
+    if (!data) return [];
     try {
       return JSON.parse(data);
     } catch {
-      return INITIAL_USER;
+      return [];
+    }
+  },
+
+  registerUser(name: string, email: string): { success: boolean; message?: string; user?: User } {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = name.trim();
+    if (!cleanEmail || !cleanName) {
+      return { success: false, message: 'Nama dan email wajib diisi.' };
+    }
+    const users = this.getRegisteredUsers();
+    const existing = users.find(u => u.email.toLowerCase() === cleanEmail);
+    if (existing) {
+      return { 
+        success: false, 
+        message: 'Email ini sudah terdaftar. Silakan pindah ke tab "Masuk".' 
+      };
+    }
+    const avatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}&backgroundColor=fbbf24,f59e0b`;
+    const newUser: User = {
+      id: `usr_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`,
+      name: cleanName,
+      email: cleanEmail,
+      avatarUrl: avatar
+    };
+    users.push(newUser);
+    localStorage.setItem('RESEARCH_AI_REGISTERED_USERS_V1', JSON.stringify(users));
+    this.saveUser(newUser);
+    return { success: true, user: newUser };
+  },
+
+  loginUser(email: string): { success: boolean; message?: string; user?: User } {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      return { success: false, message: 'Alamat email wajib diisi.' };
+    }
+    const users = this.getRegisteredUsers();
+    const existing = users.find(u => u.email.toLowerCase() === cleanEmail);
+    if (!existing) {
+      return { 
+        success: false, 
+        message: 'Akun dengan email ini belum terdaftar. Silakan pilih tab "Buat Akun Baru" terlebih dahulu untuk mendaftar.' 
+      };
+    }
+    this.saveUser(existing);
+    return { success: true, user: existing };
+  },
+
+  getUser(): User | null {
+    const data = localStorage.getItem('RESEARCH_AI_USER_V1');
+    if (!data) return null;
+    try {
+      return JSON.parse(data);
+    } catch {
+      return null;
     }
   },
 
   saveUser(user: User) {
     localStorage.setItem('RESEARCH_AI_USER_V1', JSON.stringify(user));
+  },
+
+  clearActiveUser() {
+    localStorage.removeItem('RESEARCH_AI_USER_V1');
   }
 };
 

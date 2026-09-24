@@ -9,8 +9,7 @@ import {
   CheckCircle2,
   Clock,
   Sparkles,
-  FolderPlus,
-  Download
+  FolderPlus
 } from 'lucide-react';
 import { Project, ResearchState, User } from '../../types';
 
@@ -20,7 +19,6 @@ interface DashboardProps {
   onSelectProject: (projectId: string) => void;
   onNewResearch: () => void;
   onQuickAction: (action: 'add_source' | 'notebooklm' | 'visualization') => void;
-  onLoadSampleData?: () => void;
   onViewAll?: () => void;
 }
 
@@ -30,7 +28,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onSelectProject,
   onNewResearch,
   onQuickAction,
-  onLoadSampleData,
   onViewAll
 }) => {
   // Compute dashboard metrics
@@ -122,10 +119,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <div className="space-y-1">
                   <h3 className="text-sm font-semibold text-zinc-900">Belum Ada Proyek Riset</h3>
                   <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
-                    Workspace pribadi Anda siap. Mulai proyek riset baru Anda, atau muat data sampel untuk mengeksplorasi fitur analisis.
+                    Workspace pribadi Anda siap. Mulai proyek riset baru Anda untuk mengumpulkan sumber data dan merumuskan titik temu.
                   </p>
                 </div>
-                <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
+                <div className="flex items-center justify-center pt-2">
                   <button
                     onClick={onNewResearch}
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-400 hover:bg-amber-500 text-zinc-950 text-xs font-semibold rounded-xl transition-colors shadow-2xs"
@@ -133,15 +130,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>Buat Riset Pertama</span>
                   </button>
-                  {onLoadSampleData && (
-                    <button
-                      onClick={onLoadSampleData}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-semibold rounded-xl transition-colors"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>Muat Data Contoh (Demo)</span>
-                    </button>
-                  )}
                 </div>
               </div>
             ) : (

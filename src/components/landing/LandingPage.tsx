@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Sparkles,
   ArrowRight,
-  Play,
   User as UserIcon,
   BookOpen,
   Search,
@@ -12,9 +11,11 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react';
 import { User } from '../../types';
-import { INITIAL_USER, INITIAL_PROJECTS, StorageService } from '../../db/storage';
+import { StorageService } from '../../db/storage';
 
 interface LandingPageProps {
   onLoginSuccess: (user: User) => void;
@@ -51,58 +52,78 @@ const STEPS = [
 export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
   const [openStep, setOpenStep] = useState<number | null>(0);
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
 
-  const handleManualLogin = (e: React.FormEvent) => {
+  const handleTabChange = (tab: 'login' | 'signup') => {
+    setActiveTab(tab);
+    setAuthError(null);
+    setAuthSuccess(null);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim()) return;
-    const finalAvatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=fbbf24,f59e0b`;
-    const user: User = {
-      id: `usr_${email.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
-      name,
-      email,
-      avatarUrl: finalAvatar,
-    };
-    StorageService.saveUser(user);
-    onLoginSuccess(user);
-  };
+    setAuthError(null);
+    setAuthSuccess(null);
 
-  const handleDemoLogin = () => {
-    StorageService.saveUser(INITIAL_USER);
-    const current = StorageService.getAllProjects();
-    const hasDemo = current.some(p => p.userId === INITIAL_USER.id);
-    if (!hasDemo) {
-      StorageService.saveProjects([...INITIAL_PROJECTS, ...current]);
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (activeTab === 'login') {
+      if (!cleanEmail) {
+        setAuthError('Silakan masukkan alamat email Anda.');
+        return;
+      }
+      const res = StorageService.loginUser(cleanEmail);
+      if (!res.success) {
+        setAuthError(res.message || 'Akun tidak ditemukan. Silakan buat akun baru.');
+        return;
+      }
+      onLoginSuccess(res.user!);
+    } else {
+      const cleanName = name.trim();
+      if (!cleanName || !cleanEmail) {
+        setAuthError('Nama lengkap dan email wajib diisi.');
+        return;
+      }
+      const res = StorageService.registerUser(cleanName, cleanEmail);
+      if (!res.success) {
+        setAuthError(res.message || 'Pendaftaran gagal.');
+        return;
+      }
+      setAuthSuccess('Akun berhasil dibuat! Mengalihkan ke workspace...');
+      setTimeout(() => {
+        onLoginSuccess(res.user!);
+      }, 500);
     }
-    onLoginSuccess(INITIAL_USER);
-  };
-
-  const handleQuickNicky = () => {
-    const nickyUser: User = {
-      id: 'usr_nickysae',
-      name: 'Nicky Sae',
-      email: 'nickysae@gmail.com',
-      avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=Nicky+Sae&backgroundColor=fbbf24,f59e0b',
-    };
-    StorageService.saveUser(nickyUser);
-    onLoginSuccess(nickyUser);
   };
 
   const handleGoogleLogin = () => {
-    const inputEmail = prompt('Masukkan Email Google Anda:', 'nickysae@gmail.com');
+    setAuthError(null);
+    setAuthSuccess(null);
+    const inputEmail = prompt('Masukkan Email Google Anda:');
     if (!inputEmail) return;
-    const defaultName = inputEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    const inputName = prompt('Masukkan Nama Lengkap Anda:', defaultName) || defaultName;
-    const avatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(inputName)}&backgroundColor=fbbf24,f59e0b`;
-    const user: User = {
-      id: `usr_${inputEmail.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
-      name: inputName,
-      email: inputEmail,
-      avatarUrl: avatar,
-    };
-    StorageService.saveUser(user);
-    onLoginSuccess(user);
+
+    const cleanEmail = inputEmail.trim().toLowerCase();
+    const registered = StorageService.getRegisteredUsers();
+    const existing = registered.find(u => u.email.toLowerCase() === cleanEmail);
+
+    if (existing) {
+      StorageService.saveUser(existing);
+      onLoginSuccess(existing);
+    } else {
+      const defaultName = cleanEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const inputName = prompt('Email belum terdaftar. Masukkan Nama Lengkap untuk membuat akun baru:', defaultName);
+      if (!inputName) return;
+
+      const res = StorageService.registerUser(inputName, cleanEmail);
+      if (res.success && res.user) {
+        onLoginSuccess(res.user);
+      } else {
+        setAuthError(res.message || 'Pendaftaran Google gagal.');
+      }
+    }
   };
 
   return (
@@ -118,8 +139,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
           <div className="flex items-center gap-6 text-xs font-semibold text-zinc-500">
             <a href="#panduan" className="hover:text-zinc-900 transition-colors">Panduan</a>
             <a href="#about" className="hover:text-zinc-900 transition-colors">About</a>
-            <a href="#masuk" className="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-zinc-950 rounded-xl transition-colors">
-              Masuk
+            <a href="#masuk" className="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-zinc-950 rounded-xl transition-colors font-semibold">
+              Masuk / Daftar
             </a>
           </div>
         </div>
@@ -137,19 +158,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
           Research AI adalah workspace riset berbasis AI — mengumpulkan sumber, menemukan titik temu lintas literatur, dan mengubah data menjadi wawasan yang siap dipublikasikan.
         </p>
         <div className="flex items-center justify-center gap-3 flex-wrap">
-          <button
-            onClick={handleDemoLogin}
-            className="flex items-center gap-2 px-5 py-2.5 bg-amber-400 hover:bg-amber-500 text-zinc-950 font-semibold text-sm rounded-xl transition-colors shadow-sm"
-          >
-            <Play className="w-3.5 h-3.5 fill-zinc-950" />
-            Coba Demo Gratis
-          </button>
           <a
             href="#masuk"
-            className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-sm rounded-xl transition-colors"
+            className="flex items-center gap-2 px-6 py-2.5 bg-amber-400 hover:bg-amber-500 text-zinc-950 font-semibold text-sm rounded-xl transition-colors shadow-sm"
           >
-            Masuk ke Workspace
+            Mulai Riset Sekarang
             <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+          <a
+            href="#panduan"
+            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-semibold text-sm rounded-xl transition-colors"
+          >
+            Pelajari Alur Riset
           </a>
         </div>
       </section>
@@ -173,52 +193,56 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
       {/* ── SECTION 1: LOGIN / DAFTAR ── */}
       <section id="masuk" className="max-w-5xl mx-auto px-6 pb-20">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-serif font-bold text-zinc-900 mb-2">Mulai Sekarang</h2>
-          <p className="text-sm text-zinc-500">Login atau buat akun untuk mengakses workspace riset Anda</p>
+          <h2 className="text-2xl font-serif font-bold text-zinc-900 mb-2">Akses Workspace Riset</h2>
+          <p className="text-sm text-zinc-500">
+            {activeTab === 'login' 
+              ? 'Masukkan email Anda yang telah terdaftar untuk masuk' 
+              : 'Daftarkan akun baru untuk memulai riset pribadi Anda'}
+          </p>
         </div>
 
         <div className="max-w-md mx-auto bg-white rounded-3xl border border-zinc-200 shadow-xl overflow-hidden">
-
-          {/* Quick Access */}
-          <div className="p-5 bg-amber-50 border-b border-amber-100">
-            <p className="text-[11px] font-semibold text-amber-800 flex items-center gap-1.5 mb-3">
-              <Sparkles className="w-3.5 h-3.5" /> Akses Cepat — 1 Klik Langsung Masuk
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={handleDemoLogin}
-                className="flex items-center justify-center gap-1.5 py-2 px-3 bg-amber-400 hover:bg-amber-500 text-zinc-950 text-xs font-semibold rounded-xl transition-colors"
-              >
-                <Play className="w-3 h-3 fill-zinc-950" /> Demo (Alexandra)
-              </button>
-              <button
-                onClick={handleQuickNicky}
-                className="flex items-center justify-center gap-1.5 py-2 px-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold rounded-xl transition-colors"
-              >
-                <UserIcon className="w-3 h-3" /> Akun Nicky Sae
-              </button>
-            </div>
-          </div>
-
           <div className="p-6 space-y-5">
-            {/* Tab */}
+            {/* Tab Toggle */}
             <div className="flex bg-zinc-100 rounded-xl p-1 text-xs font-semibold">
               <button
-                onClick={() => setActiveTab('login')}
-                className={`flex-1 py-2 rounded-lg transition-all ${activeTab === 'login' ? 'bg-white shadow-xs text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}`}
+                type="button"
+                onClick={() => handleTabChange('login')}
+                className={`flex-1 py-2 rounded-lg transition-all ${
+                  activeTab === 'login' ? 'bg-white shadow-xs text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'
+                }`}
               >
                 Masuk
               </button>
               <button
-                onClick={() => setActiveTab('signup')}
-                className={`flex-1 py-2 rounded-lg transition-all ${activeTab === 'signup' ? 'bg-white shadow-xs text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}`}
+                type="button"
+                onClick={() => handleTabChange('signup')}
+                className={`flex-1 py-2 rounded-lg transition-all ${
+                  activeTab === 'signup' ? 'bg-white shadow-xs text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'
+                }`}
               >
                 Buat Akun Baru
               </button>
             </div>
 
+            {/* Error & Success Messages */}
+            {authError && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <p className="leading-relaxed">{authError}</p>
+              </div>
+            )}
+
+            {authSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <p>{authSuccess}</p>
+              </div>
+            )}
+
             {/* Google Button */}
             <button
+              type="button"
               onClick={handleGoogleLogin}
               className="w-full py-2.5 px-4 rounded-xl border border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50 flex items-center justify-center gap-2.5 text-xs font-semibold text-zinc-800 transition-all"
             >
@@ -228,34 +252,35 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
               </svg>
-              {activeTab === 'login' ? 'Masuk dengan Google' : 'Daftar dengan Google'}
+              <span>{activeTab === 'login' ? 'Masuk dengan Akun Google' : 'Daftar dengan Akun Google'}</span>
             </button>
 
             <div className="flex items-center gap-3 text-[11px] text-zinc-400">
               <div className="flex-1 h-px bg-zinc-100" />
-              <span>atau isi manual</span>
+              <span>atau gunakan email</span>
               <div className="flex-1 h-px bg-zinc-100" />
             </div>
 
             {/* Form */}
-            <form onSubmit={handleManualLogin} className="space-y-3 text-xs">
-              {activeTab === 'signup' || true ? (
+            <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+              {activeTab === 'signup' && (
                 <div>
                   <label className="block font-semibold text-zinc-700 mb-1">
-                    {activeTab === 'signup' ? 'Nama Lengkap' : 'Nama Lengkap Peneliti'}
+                    Nama Lengkap Peneliti
                   </label>
                   <input
                     type="text"
-                    placeholder="Contoh: Nicky Sae"
+                    placeholder="Contoh: Abdurrosyid Robbani"
                     value={name}
                     onChange={e => setName(e.target.value)}
                     className="w-full p-2.5 rounded-xl border border-zinc-200 bg-zinc-50/50 focus:bg-white focus:ring-2 focus:ring-amber-400/50 outline-none transition"
                     required
                   />
                 </div>
-              ) : null}
+              )}
+
               <div>
-                <label className="block font-semibold text-zinc-700 mb-1">Email</label>
+                <label className="block font-semibold text-zinc-700 mb-1">Alamat Email</label>
                 <input
                   type="email"
                   placeholder="nama@email.com"
@@ -265,11 +290,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
                   required
                 />
               </div>
+
               <button
                 type="submit"
-                className="w-full py-3 bg-amber-400 hover:bg-amber-500 text-zinc-950 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 bg-amber-400 hover:bg-amber-500 text-zinc-950 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
               >
-                {activeTab === 'login' ? 'Masuk ke Workspace' : 'Buat Akun & Masuk'}
+                <span>{activeTab === 'login' ? 'Masuk ke Workspace' : 'Daftar & Masuk ke Workspace'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -321,13 +347,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
           </div>
 
           <div className="text-center mt-10">
-            <button
-              onClick={handleDemoLogin}
+            <a
+              href="#masuk"
               className="inline-flex items-center gap-2 px-6 py-3 bg-amber-400 hover:bg-amber-500 text-zinc-950 font-semibold text-sm rounded-xl transition-colors shadow-sm"
             >
-              <Play className="w-3.5 h-3.5 fill-zinc-950" />
-              Coba Langsung Sekarang
-            </button>
+              <span>Mulai Riset Anda</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </a>
           </div>
         </div>
       </section>
@@ -341,7 +367,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
             Research AI lahir dari kebutuhan nyata para peneliti yang kewalahan mengelola literatur dan kehilangan benang merah di antara ratusan sumber. Proyek ini dibangun sebagai bukti bahwa AI bukan pengganti peneliti — melainkan katalis yang mempercepat proses penemuan.
           </p>
           <p className="text-sm text-zinc-500 leading-relaxed mb-10">
-            Didesain dan dikembangkan dengan ❤️ sebagai bagian dari eksplorasi agentic AI untuk sains. Lihat lebih banyak proyek serupa di halaman portofolio.
+            Didesain dan dikembangkan sebagai bagian dari eksplorasi agentic AI untuk sains. Lihat portofolio lengkap untuk eksplorasi teknologi lainnya.
           </p>
 
           <a
@@ -364,7 +390,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
             <span>Research AI — Evidence-First Scientific Orchestration</span>
           </div>
           <div className="flex items-center gap-4">
-            <a href="#masuk" className="hover:text-zinc-700 transition-colors">Masuk</a>
+            <a href="#masuk" className="hover:text-zinc-700 transition-colors">Masuk / Daftar</a>
             <a href="#panduan" className="hover:text-zinc-700 transition-colors">Panduan</a>
             <a href="https://abdurrosyid-portfolio.vercel.app/" target="_blank" rel="noreferrer" className="hover:text-zinc-700 transition-colors flex items-center gap-1">
               Portfolio <ExternalLink className="w-3 h-3" />

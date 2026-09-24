@@ -11,11 +11,18 @@ import { SettingsModal } from './components/modals/SettingsModal';
 import { AuthModal } from './components/modals/AuthModal';
 import { HelpModal } from './components/modals/HelpModal';
 import { Project, Source, User } from './types';
-import { StorageService, INITIAL_PROJECTS } from './db/storage';
+import { StorageService } from './db/storage';
 
 const AUTH_STATUS_KEY = 'RESEARCH_AI_IS_LOGGED_IN';
 
 export type AppView = 'landing' | 'workspace';
+
+const DEFAULT_USER: User = {
+  id: 'usr_guest',
+  name: 'Peneliti',
+  email: 'peneliti@workspace.ai',
+  avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=Peneliti&backgroundColor=fbbf24'
+};
 
 export const App: React.FC = () => {
   const [appView, setAppView] = useState<AppView>(() => {
@@ -24,7 +31,7 @@ export const App: React.FC = () => {
   });
 
   const [projects, setProjects] = useState<Project[]>([]);
-  const [currentUser, setCurrentUser] = useState<User>(StorageService.getUser());
+  const [currentUser, setCurrentUser] = useState<User>(() => StorageService.getUser() || DEFAULT_USER);
   const [activeNav, setActiveNav] = useState<ActiveNav>('home');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [projectTab, setProjectTab] = useState<ProjectTabKey>('Overview');
@@ -40,9 +47,10 @@ export const App: React.FC = () => {
   // Initialize data from local storage
   useEffect(() => {
     const loadedUser = StorageService.getUser();
-    const loadedProjects = StorageService.getProjects(loadedUser.id);
-    setProjects(loadedProjects);
-    setCurrentUser(loadedUser);
+    if (loadedUser) {
+      setCurrentUser(loadedUser);
+      setProjects(StorageService.getProjects(loadedUser.id));
+    }
   }, []);
 
   const handleLoginSuccess = (user: User) => {
@@ -54,20 +62,10 @@ export const App: React.FC = () => {
   };
 
   const handleLogout = () => {
+    StorageService.clearActiveUser();
     setSelectedProjectId(null);
     setAppView('landing');
     localStorage.setItem(AUTH_STATUS_KEY, 'false');
-  };
-
-  const handleLoadSampleData = () => {
-    const sampleProjects: Project[] = INITIAL_PROJECTS.map((p, idx) => ({
-      ...p,
-      id: `proj_${currentUser.id}_${idx + 1}_${Date.now()}`,
-      userId: currentUser.id,
-      title: `${p.title} (Contoh)`
-    }));
-    sampleProjects.forEach(p => StorageService.saveProject(p));
-    setProjects(StorageService.getProjects(currentUser.id));
   };
 
   const currentProject = projects.find(p => p.id === selectedProjectId);
@@ -257,7 +255,6 @@ export const App: React.FC = () => {
                 setActiveNav('workspace');
               }}
               onNewResearch={() => setIsNewResearchOpen(true)}
-              onLoadSampleData={handleLoadSampleData}
             />
           ) : (
             <Dashboard
@@ -270,7 +267,6 @@ export const App: React.FC = () => {
               }}
               onNewResearch={() => setIsNewResearchOpen(true)}
               onQuickAction={handleQuickAction}
-              onLoadSampleData={handleLoadSampleData}
               onViewAll={() => setActiveNav('my-research')}
             />
           )}
@@ -309,7 +305,6 @@ export const App: React.FC = () => {
         isOpen={isHelpOpen}
         onClose={() => setIsHelpOpen(false)}
         onNewResearch={() => setIsNewResearchOpen(true)}
-        onLoadSample={handleLoadSampleData}
       />
     </div>
   );
