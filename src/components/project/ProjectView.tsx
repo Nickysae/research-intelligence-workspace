@@ -31,16 +31,24 @@ interface ProjectViewProps {
   onUpdateProject: (updated: Project) => void;
   onOpenAddSource: () => void;
   onBackToDashboard: () => void;
+  initialTab?: ProjectTabKey;
 }
 
 export const ProjectView: React.FC<ProjectViewProps> = ({
   project,
   onUpdateProject,
   onOpenAddSource,
-  onBackToDashboard
+  onBackToDashboard,
+  initialTab = 'Overview'
 }) => {
-  const [activeTab, setActiveTab] = useState<ProjectTabKey>('Overview');
+  const [activeTab, setActiveTab] = useState<ProjectTabKey>(initialTab);
   const [copiedShare, setCopiedShare] = useState(false);
+
+  React.useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   const tabs: ProjectTabKey[] = [
     'Overview',

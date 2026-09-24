@@ -21,6 +21,7 @@ interface DashboardProps {
   onNewResearch: () => void;
   onQuickAction: (action: 'add_source' | 'notebooklm' | 'visualization') => void;
   onLoadSampleData?: () => void;
+  onViewAll?: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -29,7 +30,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onSelectProject,
   onNewResearch,
   onQuickAction,
-  onLoadSampleData
+  onLoadSampleData,
+  onViewAll
 }) => {
   // Compute dashboard metrics
   const activeCount = projects.filter(p => p.state !== 'Finalized').length;
@@ -102,7 +104,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-zinc-900">Recent Research</h2>
-            <button className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1 transition-colors">
+            <button 
+              onClick={onViewAll}
+              className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1 transition-colors"
+            >
               <span>View all</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>

@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar, ActiveNav } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { Dashboard } from './components/dashboard/Dashboard';
-import { ProjectView } from './components/project/ProjectView';
+import { ProjectView, ProjectTabKey } from './components/project/ProjectView';
 import { LandingPage } from './components/landing/LandingPage';
+import { MyResearchView } from './components/dashboard/MyResearchView';
 import { NewResearchModal } from './components/modals/NewResearchModal';
 import { AddSourceModal } from './components/modals/AddSourceModal';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { AuthModal } from './components/modals/AuthModal';
+import { HelpModal } from './components/modals/HelpModal';
 import { Project, Source, User } from './types';
 import { StorageService, INITIAL_PROJECTS } from './db/storage';
 
@@ -25,6 +27,7 @@ export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User>(StorageService.getUser());
   const [activeNav, setActiveNav] = useState<ActiveNav>('home');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [projectTab, setProjectTab] = useState<ProjectTabKey>('Overview');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modals state
@@ -32,6 +35,7 @@ export const App: React.FC = () => {
   const [isAddSourceOpen, setIsAddSourceOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   // Initialize data from local storage
   useEffect(() => {
@@ -102,11 +106,21 @@ export const App: React.FC = () => {
 
   // Quick action from dashboard
   const handleQuickAction = (action: 'add_source' | 'notebooklm' | 'visualization') => {
-    if (projects.length > 0) {
-      setSelectedProjectId(projects[0].id);
-      if (action === 'add_source') {
-        setIsAddSourceOpen(true);
-      }
+    if (projects.length === 0) {
+      setIsNewResearchOpen(true);
+      return;
+    }
+    const targetId = selectedProjectId || projects[0].id;
+    setSelectedProjectId(targetId);
+    if (action === 'add_source') {
+      setProjectTab('Sources');
+      setIsAddSourceOpen(true);
+    } else if (action === 'notebooklm') {
+      setProjectTab('NotebookLM');
+      setActiveNav('notebooklm');
+    } else if (action === 'visualization') {
+      setProjectTab('Visualization');
+      setActiveNav('visualization');
     }
   };
 
@@ -121,8 +135,33 @@ export const App: React.FC = () => {
   const getBreadcrumbs = () => {
     if (selectedProjectId && currentProject) {
       return [
-        { label: 'My Research', onClick: () => setSelectedProjectId(null) },
+        { 
+          label: 'Home', 
+          onClick: () => {
+            setSelectedProjectId(null);
+            setActiveNav('home');
+          } 
+        },
+        { 
+          label: 'My Research', 
+          onClick: () => {
+            setSelectedProjectId(null);
+            setActiveNav('my-research');
+          } 
+        },
         { label: currentProject.title }
+      ];
+    }
+    if (activeNav === 'my-research') {
+      return [
+        { 
+          label: 'Home', 
+          onClick: () => {
+            setSelectedProjectId(null);
+            setActiveNav('home');
+          } 
+        },
+        { label: 'My Research' }
       ];
     }
     return undefined;
@@ -146,10 +185,38 @@ export const App: React.FC = () => {
         currentUser={currentUser}
         setActiveNav={(nav) => {
           setActiveNav(nav);
-          if (nav === 'home' || nav === 'my-research') {
+          if (nav === 'home') {
             setSelectedProjectId(null);
-          } else if (projects.length > 0 && !selectedProjectId) {
-            setSelectedProjectId(projects[0].id);
+          } else if (nav === 'my-research') {
+            setSelectedProjectId(null);
+          } else if (nav === 'workspace') {
+            if (projects.length > 0) {
+              if (!selectedProjectId) setSelectedProjectId(projects[0].id);
+              setProjectTab('Overview');
+            } else {
+              setIsNewResearchOpen(true);
+            }
+          } else if (nav === 'sources') {
+            if (projects.length > 0) {
+              if (!selectedProjectId) setSelectedProjectId(projects[0].id);
+              setProjectTab('Sources');
+            } else {
+              setIsNewResearchOpen(true);
+            }
+          } else if (nav === 'notebooklm') {
+            if (projects.length > 0) {
+              if (!selectedProjectId) setSelectedProjectId(projects[0].id);
+              setProjectTab('NotebookLM');
+            } else {
+              setIsNewResearchOpen(true);
+            }
+          } else if (nav === 'visualization') {
+            if (projects.length > 0) {
+              if (!selectedProjectId) setSelectedProjectId(projects[0].id);
+              setProjectTab('Visualization');
+            } else {
+              setIsNewResearchOpen(true);
+            }
           }
         }}
         onOpenSettings={() => setIsSettingsOpen(true)}
@@ -166,7 +233,7 @@ export const App: React.FC = () => {
           currentUser={currentUser}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenAuth={() => setIsAuthOpen(true)}
-          onOpenHelp={() => {}}
+          onOpenHelp={() => setIsHelpOpen(true)}
         />
 
         <main className="flex-1 overflow-y-auto">
@@ -175,16 +242,36 @@ export const App: React.FC = () => {
               project={currentProject}
               onUpdateProject={handleUpdateProject}
               onOpenAddSource={() => setIsAddSourceOpen(true)}
-              onBackToDashboard={() => setSelectedProjectId(null)}
+              onBackToDashboard={() => {
+                setSelectedProjectId(null);
+                setActiveNav('home');
+              }}
+              initialTab={projectTab}
+            />
+          ) : activeNav === 'my-research' ? (
+            <MyResearchView
+              projects={filteredProjects}
+              onSelectProject={(id) => {
+                setSelectedProjectId(id);
+                setProjectTab('Overview');
+                setActiveNav('workspace');
+              }}
+              onNewResearch={() => setIsNewResearchOpen(true)}
+              onLoadSampleData={handleLoadSampleData}
             />
           ) : (
             <Dashboard
               projects={filteredProjects}
               currentUser={currentUser}
-              onSelectProject={(id) => setSelectedProjectId(id)}
+              onSelectProject={(id) => {
+                setSelectedProjectId(id);
+                setProjectTab('Overview');
+                setActiveNav('workspace');
+              }}
               onNewResearch={() => setIsNewResearchOpen(true)}
               onQuickAction={handleQuickAction}
               onLoadSampleData={handleLoadSampleData}
+              onViewAll={() => setActiveNav('my-research')}
             />
           )}
         </main>
@@ -197,11 +284,11 @@ export const App: React.FC = () => {
         onProjectCreated={handleProjectCreated}
       />
 
-      {currentProject && (
+      {(currentProject || projects.length > 0) && (
         <AddSourceModal
           isOpen={isAddSourceOpen}
           onClose={() => setIsAddSourceOpen(false)}
-          project={currentProject}
+          project={currentProject || projects[0]}
           onSourceAdded={handleSourceAdded}
         />
       )}
@@ -216,6 +303,13 @@ export const App: React.FC = () => {
         onClose={() => setIsAuthOpen(false)}
         currentUser={currentUser}
         onUserUpdated={handleUserUpdated}
+      />
+
+      <HelpModal
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+        onNewResearch={() => setIsNewResearchOpen(true)}
+        onLoadSample={handleLoadSampleData}
       />
     </div>
   );

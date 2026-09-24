@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Search, Bell, Sparkles, HelpCircle } from 'lucide-react';
 import { User } from '../../types';
 
@@ -21,6 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAuth,
   onOpenHelp
 }) => {
+  const [showNotifications, setShowNotifications] = useState(false);
   return (
     <header className="h-16 px-8 border-b border-zinc-200/80 bg-white/80 backdrop-blur-md flex items-center justify-between sticky top-0 z-30">
       {/* Left: Breadcrumbs or Title */}
@@ -75,13 +76,35 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         {/* Notification Bell */}
-        <button 
-          title="Notifications"
-          className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors relative"
-        >
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-500 ring-2 ring-white"></span>
-        </button>
+        <div className="relative">
+          <button 
+            onClick={() => setShowNotifications(prev => !prev)}
+            title="Notifications"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors relative"
+          >
+            <Bell className="w-4 h-4" />
+            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-500 ring-2 ring-white"></span>
+          </button>
+
+          {showNotifications && (
+            <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-zinc-200 p-4 space-y-3 z-50 text-xs animate-in fade-in zoom-in-95">
+              <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
+                <span className="font-semibold text-zinc-900">Notifikasi</span>
+                <span className="text-[10px] text-zinc-400">Terbaru</span>
+              </div>
+              <div className="space-y-2">
+                <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-100 text-zinc-800">
+                  <p className="font-semibold text-amber-900 text-[11px]">✨ Workspace Siap</p>
+                  <p className="text-[11px] text-zinc-600 mt-0.5">Sistem siap menganalisis pertanyaan dan data riset Anda.</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-100 text-zinc-800">
+                  <p className="font-semibold text-zinc-900 text-[11px]">🤖 AI Evidence Engine Aktif</p>
+                  <p className="text-[11px] text-zinc-600 mt-0.5">Konektor OpenAlex, arXiv, & World Bank siap digunakan.</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* User Mini Avatar Triggering Auth Modal */}
         <button 
