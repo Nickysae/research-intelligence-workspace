@@ -541,5 +541,23 @@ export const StorageService = {
 
   saveSettings(settings: AppSettings) {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  },
+
+  getUser(): User {
+    const data = localStorage.getItem('RESEARCH_AI_USER_V1');
+    if (!data) {
+      localStorage.setItem('RESEARCH_AI_USER_V1', JSON.stringify(INITIAL_USER));
+      return INITIAL_USER;
+    }
+    try {
+      return JSON.parse(data);
+    } catch {
+      return INITIAL_USER;
+    }
+  },
+
+  saveUser(user: User) {
+    localStorage.setItem('RESEARCH_AI_USER_V1', JSON.stringify(user));
   }
 };
+

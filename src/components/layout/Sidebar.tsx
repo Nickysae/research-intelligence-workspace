@@ -8,19 +8,28 @@ import {
   BarChart3, 
   Settings, 
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  User as UserIcon
 } from 'lucide-react';
-import { INITIAL_USER } from '../../db/storage';
+import { User } from '../../types';
 
 export type ActiveNav = 'home' | 'my-research' | 'workspace' | 'sources' | 'notebooklm' | 'visualization' | 'settings';
 
 interface SidebarProps {
   activeNav: ActiveNav;
   setActiveNav: (nav: ActiveNav) => void;
+  currentUser: User;
   onOpenSettings: () => void;
+  onOpenAuth: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeNav, setActiveNav, onOpenSettings }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ 
+  activeNav, 
+  setActiveNav, 
+  currentUser,
+  onOpenSettings,
+  onOpenAuth
+}) => {
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'my-research', label: 'My Research', icon: FolderKanban },
@@ -85,23 +94,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeNav, setActiveNav, onOpe
           </div>
         </div>
 
-        {/* User Card */}
+        {/* Dynamic User Profile Card */}
         <div 
-          onClick={onOpenSettings}
-          className="flex items-center justify-between p-2 rounded-xl hover:bg-zinc-200/50 cursor-pointer transition-colors"
+          onClick={onOpenAuth}
+          title="Klik untuk ganti akun atau profil peneliti"
+          className="flex items-center justify-between p-2 rounded-xl hover:bg-amber-100/60 cursor-pointer border border-transparent hover:border-amber-200 transition-all group"
         >
           <div className="flex items-center gap-2.5 overflow-hidden">
             <img 
-              src={INITIAL_USER.avatarUrl} 
-              alt={INITIAL_USER.name}
-              className="w-8 h-8 rounded-full object-cover border border-zinc-200" 
+              src={currentUser.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(currentUser.name)}&backgroundColor=fbbf24`} 
+              alt={currentUser.name}
+              className="w-8 h-8 rounded-full object-cover border border-zinc-200 shrink-0" 
             />
             <div className="truncate">
-              <p className="text-xs font-semibold text-zinc-900 truncate">{INITIAL_USER.name}</p>
-              <p className="text-[11px] text-zinc-500 truncate">{INITIAL_USER.email}</p>
+              <p className="text-xs font-semibold text-zinc-900 group-hover:text-amber-950 truncate">{currentUser.name}</p>
+              <p className="text-[11px] text-zinc-500 truncate">{currentUser.email}</p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
+          <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-700 shrink-0" />
         </div>
       </div>
     </aside>

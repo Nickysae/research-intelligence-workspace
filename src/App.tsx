@@ -6,11 +6,13 @@ import { ProjectView } from './components/project/ProjectView';
 import { NewResearchModal } from './components/modals/NewResearchModal';
 import { AddSourceModal } from './components/modals/AddSourceModal';
 import { SettingsModal } from './components/modals/SettingsModal';
-import { Project, Source } from './types';
+import { AuthModal } from './components/modals/AuthModal';
+import { Project, Source, User } from './types';
 import { StorageService } from './db/storage';
 
 export const App: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [currentUser, setCurrentUser] = useState<User>(StorageService.getUser());
   const [activeNav, setActiveNav] = useState<ActiveNav>('home');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,11 +21,14 @@ export const App: React.FC = () => {
   const [isNewResearchOpen, setIsNewResearchOpen] = useState(false);
   const [isAddSourceOpen, setIsAddSourceOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   // Initialize data from local storage
   useEffect(() => {
-    const loaded = StorageService.getProjects();
-    setProjects(loaded);
+    const loadedProjects = StorageService.getProjects();
+    const loadedUser = StorageService.getUser();
+    setProjects(loadedProjects);
+    setCurrentUser(loadedUser);
   }, []);
 
   const currentProject = projects.find(p => p.id === selectedProjectId);
@@ -34,8 +39,14 @@ export const App: React.FC = () => {
   };
 
   const handleProjectCreated = (newProject: Project) => {
-    setProjects(prev => [newProject, ...prev]);
-    setSelectedProjectId(newProject.id);
+    // Associate with currentUser
+    const projectWithUser: Project = {
+      ...newProject,
+      userId: currentUser.id
+    };
+    StorageService.saveProject(projectWithUser);
+    setProjects(prev => [projectWithUser, ...prev]);
+    setSelectedProjectId(projectWithUser.id);
   };
 
   const handleSourceAdded = (newSource: Source) => {
@@ -49,6 +60,10 @@ export const App: React.FC = () => {
       }
     };
     handleUpdateProject(updated);
+  };
+
+  const handleUserUpdated = (updatedUser: User) => {
+    setCurrentUser(updatedUser);
   };
 
   // Quick action from dashboard
@@ -84,6 +99,7 @@ export const App: React.FC = () => {
       {/* Sidebar navigation */}
       <Sidebar
         activeNav={activeNav}
+        currentUser={currentUser}
         setActiveNav={(nav) => {
           setActiveNav(nav);
           if (nav === 'home' || nav === 'my-research') {
@@ -93,6 +109,7 @@ export const App: React.FC = () => {
           }
         }}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenAuth={() => setIsAuthOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -101,7 +118,9 @@ export const App: React.FC = () => {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           breadcrumbs={getBreadcrumbs()}
+          currentUser={currentUser}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenAuth={() => setIsAuthOpen(true)}
         />
 
         <main className="flex-1 overflow-y-auto">
@@ -115,6 +134,7 @@ export const App: React.FC = () => {
           ) : (
             <Dashboard
               projects={filteredProjects}
+              currentUser={currentUser}
               onSelectProject={(id) => setSelectedProjectId(id)}
               onNewResearch={() => setIsNewResearchOpen(true)}
               onQuickAction={handleQuickAction}
@@ -142,6 +162,13 @@ export const App: React.FC = () => {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+      />
+
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        currentUser={currentUser}
+        onUserUpdated={handleUserUpdated}
       />
     </div>
   );

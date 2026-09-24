@@ -1,19 +1,23 @@
 import React from 'react';
 import { Search, Bell, Sparkles } from 'lucide-react';
-import { INITIAL_USER } from '../../db/storage';
+import { User } from '../../types';
 
 interface HeaderProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   breadcrumbs?: { label: string; onClick?: () => void }[];
+  currentUser: User;
   onOpenSettings: () => void;
+  onOpenAuth: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   setSearchQuery,
   breadcrumbs,
-  onOpenSettings
+  currentUser,
+  onOpenSettings,
+  onOpenAuth
 }) => {
   return (
     <header className="h-16 px-8 border-b border-zinc-200/80 bg-white/80 backdrop-blur-md flex items-center justify-between sticky top-0 z-30">
@@ -67,15 +71,16 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-500 ring-2 ring-white"></span>
         </button>
 
-        {/* User Mini Avatar */}
+        {/* User Mini Avatar Triggering Auth Modal */}
         <button 
-          onClick={onOpenSettings}
-          className="flex items-center gap-2 pl-2 border-l border-zinc-200"
+          onClick={onOpenAuth}
+          title="Ubah Akun / Login Google"
+          className="flex items-center gap-2 pl-2 border-l border-zinc-200 group"
         >
           <img
-            src={INITIAL_USER.avatarUrl}
-            alt={INITIAL_USER.name}
-            className="w-7 h-7 rounded-full object-cover border border-zinc-200"
+            src={currentUser.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(currentUser.name)}&backgroundColor=fbbf24`}
+            alt={currentUser.name}
+            className="w-7 h-7 rounded-full object-cover border border-zinc-200 group-hover:ring-2 group-hover:ring-amber-400 transition-all"
           />
         </button>
       </div>

@@ -10,11 +10,11 @@ import {
   Clock,
   Sparkles
 } from 'lucide-react';
-import { Project, ResearchState } from '../../types';
-import { INITIAL_USER } from '../../db/storage';
+import { Project, ResearchState, User } from '../../types';
 
 interface DashboardProps {
   projects: Project[];
+  currentUser: User;
   onSelectProject: (projectId: string) => void;
   onNewResearch: () => void;
   onQuickAction: (action: 'add_source' | 'notebooklm' | 'visualization') => void;
@@ -22,6 +22,7 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({
   projects,
+  currentUser,
   onSelectProject,
   onNewResearch,
   onQuickAction
@@ -53,11 +54,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-serif tracking-tight text-zinc-950 font-normal">
-            Good morning, {INITIAL_USER.name.split(' ')[0]}
+            Good morning, {currentUser.name.split(' ')[0]}
           </h1>
           <p className="text-sm text-zinc-500 mt-1 font-sans">
             Turn your questions into well-supported insights.
           </p>
+
         </div>
 
         {/* New Research CTA Button */}
